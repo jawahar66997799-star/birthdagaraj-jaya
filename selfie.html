@@ -1,67 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Take Selfie</title>
-<style>
-  body { font-family: sans-serif; text-align: center; padding:50px; background:#111; color:#fff; }
-  video { border:2px solid #ff3d00; width:300px; height:400px; }
-  button { padding:10px 20px; margin-top:20px; font-size:16px; cursor:pointer; background:#ff3d00; color:#fff; border:none; }
-</style>
+  <meta charset="UTF-8">
+  <title>Selfie Upload Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #1a1a1a;
+      color: white;
+      padding: 20px;
+    }
+    video, canvas {
+      margin-top: 20px;
+      border: 2px solid white;
+      border-radius: 10px;
+    }
+    #captureBtn, #uploadBtn {
+      margin: 20px;
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #ff5722;
+      color: white;
+    }
+    #uploadBtn {
+      background: #4caf50;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-<h2>Take Your Selfie</h2>
-<video id="video" autoplay></video><br>
-<button id="captureBtn">Capture & Upload</button>
+  <h1>Selfie Upload</h1>
+  <p>Allow camera and take your selfie!</p>
 
-<!-- Firebase CDN -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <video id="video" width="320" height="240" autoplay></video>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
-<script>
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyBUVw2kw1sQXJol7IYV5Fnr0aGBL9U7PBU",
-    authDomain: "selfieprank-7c66a.firebaseapp.com",
-    projectId: "selfieprank-7c66a",
-    storageBucket: "selfieprank-7c66a.appspot.com",
-    messagingSenderId: "960125119948",
-    appId: "1:960125119948:web:08105f364fad688c93c169"
-  };
+  <div>
+    <button id="captureBtn">Capture Selfie</button>
+    <button id="uploadBtn" style="display:none;">Upload Selfie</button>
+  </div>
 
-  // Initialize Firebase (compat mode)
-  firebase.initializeApp(firebaseConfig);
-  const storage = firebase.storage();
+  <div id="status"></div>
 
-  // Camera access
-  const video = document.getElementById('video');
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => { video.srcObject = stream; })
-    .catch(err => { alert('Camera access denied!'); });
+  <!-- Firebase CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  // Capture & Upload
-  document.getElementById('captureBtn').addEventListener('click', () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL('image/png');
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBUVw2kw1sQXJol7IYV5Fnr0aGBL9U7PBU",
+      authDomain: "selfieprank-7c66a.firebaseapp.com",
+      projectId: "selfieprank-7c66a",
+      storageBucket: "selfieprank-7c66a.appspot.com",
+      messagingSenderId: "960125119948",
+      appId: "1:960125119948:web:08105f364fad688c93c169"
+    };
 
-    const userName = localStorage.getItem('userName') || 'unknown';
-    const userPhone = localStorage.getItem('userPhone') || '0000';
-    const timestamp = Date.now();
-    const imageRef = storage.ref(`selfies/${userName}_${userPhone}_${timestamp}.png`);
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
 
-    imageRef.putString(dataUrl, 'data_url')
-      .then(() => imageRef.getDownloadURL())
-      .then(url => {
-        localStorage.setItem('selfieUrl', url);
-        alert('Selfie uploaded successfully!');
-        window.location.href = 'fun.html';
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const captureBtn = document.getElementById("captureBtn");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const status = document.getElementById("status");
+
+    // Access camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
       })
-      .catch(err => alert('Upload failed: ' + err));
-  });
-</script>
+      .catch(err => {
+        alert("Camera access denied or unavailable.");
+        console.error(err);
+      });
+
+    // Capture selfie
+    captureBtn.addEventListener("click", () => {
+      const context = canvas.getContext("2d");
+      canvas.style.display = "block";
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      uploadBtn.style.display = "inline-block";
+      status.textContent = "Selfie captured. Ready to upload!";
+    });
+
+    // Upload selfie to Firebase
+    uploadBtn.addEventListener("click", () => {
+      const dataURL = canvas.toDataURL("image/png");
+      const blob = dataURLToBlob(dataURL);
+
+      const filename = `selfie_${Date.now()}.png`;
+      const uploadTask = storage.ref(`selfies/${filename}`).put(blob);
+
+      status.textContent = "Uploading...";
+
+      uploadTask.on("state_changed", 
+        snapshot => {
+          // You can add progress here if needed
+        }, 
+        error => {
+          console.error(error);
+          status.textContent = "Upload failed!";
+        }, 
+        () => {
+          status.textContent = "Upload successful!";
+          uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+            console.log("File available at:", downloadURL);
+          });
+        }
+      );
+    });
+
+    // Helper function to convert base64 to Blob
+    function dataURLToBlob(dataURL) {
+      const parts = dataURL.split(';base64,');
+      const contentType = parts[0].split(':')[1];
+      const byteChars = atob(parts[1]);
+      const byteNumbers = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) {
+        byteNumbers[i] = byteChars.charCodeAt(i);
+      }
+      return new Blob([new Uint8Array(byteNumbers)], { type: contentType });
+    }
+  </script>
 </body>
 </html>
