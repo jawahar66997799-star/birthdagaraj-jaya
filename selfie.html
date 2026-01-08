@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Take Selfie</title>
 <style>
-body { font-family: sans-serif; text-align: center; padding:20px; background:#111; color:#fff; }
-video { border:2px solid #ff3d00; width:300px; height:400px; }
-button { padding:10px 20px; margin-top:20px; font-size:16px; cursor:pointer; background:#ff3d00; color:#fff; border:none; }
+  body { font-family: sans-serif; text-align: center; padding:50px; background:#111; color:#fff; }
+  video { border:2px solid #ff3d00; width:300px; height:400px; }
+  button { padding:10px 20px; margin-top:20px; font-size:16px; cursor:pointer; background:#ff3d00; color:#fff; border:none; }
 </style>
 </head>
 <body>
@@ -16,8 +16,8 @@ button { padding:10px 20px; margin-top:20px; font-size:16px; cursor:pointer; bac
 <button id="captureBtn">Capture & Upload</button>
 
 <!-- Firebase CDN -->
-<script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
 <script>
   // Firebase config
@@ -29,38 +29,39 @@ button { padding:10px 20px; margin-top:20px; font-size:16px; cursor:pointer; bac
     messagingSenderId: "960125119948",
     appId: "1:960125119948:web:08105f364fad688c93c169"
   };
+
+  // Initialize Firebase (compat mode)
   firebase.initializeApp(firebaseConfig);
   const storage = firebase.storage();
 
+  // Camera access
   const video = document.getElementById('video');
-
-  // Camera
   navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => { video.srcObject = stream; })
     .catch(err => { alert('Camera access denied!'); });
 
-  function takeSelfie() {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      const dataUrl = canvas.toDataURL('image/png');
+  // Capture & Upload
+  document.getElementById('captureBtn').addEventListener('click', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL('image/png');
 
-      const userName = localStorage.getItem('userName') || 'unknown';
-      const userPhone = localStorage.getItem('userPhone') || '0000';
-      const timestamp = Date.now();
-      const imageRef = storage.ref(`selfies/${userName}_${userPhone}_${timestamp}.png`);
+    const userName = localStorage.getItem('userName') || 'unknown';
+    const userPhone = localStorage.getItem('userPhone') || '0000';
+    const timestamp = Date.now();
+    const imageRef = storage.ref(`selfies/${userName}_${userPhone}_${timestamp}.png`);
 
-      imageRef.putString(dataUrl, 'data_url').then(() => {
-          imageRef.getDownloadURL().then(url => {
-              localStorage.setItem('selfieUrl', url);
-              alert('Selfie uploaded successfully!');
-              window.location.href = 'fun.html';
-          });
-      }).catch(err => { alert('Upload failed: ' + err); });
-  }
-
-  document.getElementById('captureBtn').addEventListener('click', takeSelfie);
+    imageRef.putString(dataUrl, 'data_url')
+      .then(() => imageRef.getDownloadURL())
+      .then(url => {
+        localStorage.setItem('selfieUrl', url);
+        alert('Selfie uploaded successfully!');
+        window.location.href = 'fun.html';
+      })
+      .catch(err => alert('Upload failed: ' + err));
+  });
 </script>
 </body>
 </html>
