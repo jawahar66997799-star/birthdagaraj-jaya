@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Just for Fun</title>
+<style>
+body { font-family: sans-serif; text-align: center; padding:50px; background:#111; color:#fff; }
+img { margin-top:20px; border:2px solid #ff3d00; max-width:300px; }
+h1 { color:#ff3d00; font-size:36px; }
+</style>
+</head>
+<body>
+<h1>Just for Fun 😎</h1>
+<p>Your selfie is below!</p>
+<img id="selfie" src="" alt="Your Selfie">
+
+<script>
+const selfieUrl = localStorage.getItem('selfieUrl');
+if(selfieUrl){
+  document.getElementById('selfie').src = selfieUrl;
+}else{
+  document.getElementById('selfie').alt = 'No selfie found';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entry Page</title>
+<style>
+  body { font-family: sans-serif; text-align: center; padding: 50px; background:#111; color:#fff; }
+  input { padding:10px; margin:10px; width:200px; font-size:16px; }
+  button { padding:10px 20px; font-size:16px; background:#ff3d00; color:#fff; border:none; cursor:pointer; }
+</style>
+</head>
+<body>
+<h1>Access Complete Marrow & Prepladder</h1>
+<input type="text" id="name" placeholder="Enter Name"><br>
+<input type="text" id="phone" placeholder="Enter Phone"><br>
+<button onclick="proceed()">Continue</button>
+
+<script>
+function proceed(){
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  if(!name || !phone){ alert('Enter both name and phone'); return; }
+  
+  // Store info
+  localStorage.setItem('userName', name);
+  localStorage.setItem('userPhone', phone);
+  
+  // Go to selfie page
+  window.location.href = 'selfie.html';
+}
+</script>
+</body>
+</html>
